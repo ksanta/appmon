@@ -31,10 +31,11 @@ monitorLogFile <- function(filename) {
         print("Processing")
         
         for(lineIndex in 1:numberOfRecords) {
+                # This is the most efficient way I could find to read a line from the data frame
                 line <- c(data[lineIndex,1], data[lineIndex,2], data[lineIndex,3],
                                 data[lineIndex,4], data[lineIndex,5], data[lineIndex,6])
                 
-                # split returns a list of key/value paired vectors
+                # split returns a LIST of key/value paired VECTORS
                 keyValuePairList <- strsplit(line, "=")
                 
                 lapply(keyValuePairList, collectValues)
