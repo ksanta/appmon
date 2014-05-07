@@ -1,5 +1,16 @@
-## Loads a monitor log file
+## Loads a monitor log file.  Attempts to load a .processed file first, to speed things up
 monitorLogFile <- function(filename) {
+        # Check if processed file already exists and try loading that - for speed
+        processedFileName <- paste(filename, ".processed", sep="")
+        if(file.exists(processedFileName)) {
+                print("Loading processed file")
+                
+                data <- read.csv(file=processedFileName, header=TRUE, colClasses=c("character", "POSIXct",
+                        "POSIXct", "character", "factor", "factor", "numeric"))
+                data$X <- NULL
+                return(data)
+        }
+        
         print("Reading file")
         data <- read.csv(file=filename, header=FALSE, stringsAsFactors=FALSE)
         
@@ -60,6 +71,10 @@ monitorLogFile <- function(filename) {
         result <- data.frame(Start.Time=startTime, End.Time=endTime,Session.Id=sessionId,Transaction=transaction,
                              User=user, Duration=dateDiffs, stringsAsFactors=FALSE)
 
+        # Write to file so it's quicker to load next time
+        print("Saving processed monitor log file")
+        write.csv(result, file = processedFileName)
+        
         # return
         result
 }
