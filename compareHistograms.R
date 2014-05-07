@@ -7,11 +7,14 @@ compareHistograms <- function(file1, file2) {
                 dir.create("histograms")
         }
         
-        for(index in seq_along(levels(data1$Transaction))) {
-                transaction <- levels(data1$Transaction)[index]
+        transactions <- levels(data1$Transaction)
+        for(index in seq_along(transactions)) {
+                transaction <- transactions[index]
                 print(paste(index, "=", transaction))
                 png(filename=paste("histograms/", index, ".png", sep=""))
-                hist(data1$Duration[data1$Transaction == transaction], breaks=100)
+                hist(data1$Duration[data1$Transaction == transaction], breaks=100, xlab="Duration (secs)",
+                     main=transaction)
+                
                 dev.off()
         }
 }
