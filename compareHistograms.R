@@ -13,25 +13,32 @@ compareHistograms <- function(file1, file2) {
         
         transactionTypes <- levels(data1$Transaction)
         for(index in seq_along(transactionTypes)) {
-                # prep data
+                # prep data, taking log10's of durations
                 transactionType <- transactionTypes[index]
                 logDurations1 <- data1[transactionType, log10(Duration)]$V1
                 logDurations2 <- data2[transactionType, log10(Duration)]$V1
                 
-                # skip if have less than 3 samples, as density function won't work otherwise
+                # skip if have less than 3 samples, as histogram won't work otherwise
                 if(length(logDurations1) <= 2 || length(logDurations2) <= 2) {
                         print(paste(index, "= (SKIPPED) ", transactionType))
                         next()
                 }
                 
-                # build up the graph
+                #TODO: stop this from plotting
+                hist1 <- hist(logDurations1)
+                hist2 <- hist(logDurations2)
+
+                # open PNG graphics device
                 print(paste(index, "=", transactionType))
                 png(filename=paste("histograms/", index, ".png", sep=""), width=600, height=600)
-                plot(density(logDurations1), xlab="Log Duration (millisecs)", main=transactionType, col="red", type="n", xlim=c(0,5))
-                lines(density(logDurations1), col="red")
-                lines(density(logDurations2), col="blue")
                 
+                # build up the graph
+                plot(hist1, col=rgb(1,0,0,1/4), main=transactionType, xlab="Log Duration (millisecs)", xlim=c(0,5), type="n")
+                lines(hist1, col=rgb(1,0,0,1/4))
+                lines(hist2, col=rgb(0,0,1,1/4))
                 legend("topright", lty=1, c(file1, file2), col=c("red", "blue"))
+                
+                # TODO: Use try/catch to ensure device is closed
                 dev.off()
         }
 }
