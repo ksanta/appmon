@@ -15,10 +15,8 @@ compareHistograms <- function(file1, file2) {
   for(index in seq_along(transactionTypes)) {
     # prep data
     transactionType <- transactionTypes[index]
-    logDurations1 <- log10(data1$Duration[data1$Transaction == transactionType] * 1000)
-    logDurations2 <- log10(data2$Duration[data2$Transaction == transactionType] * 1000)
-    
-    maxX = max(logDurations1, logDurations2, na.rm=TRUE)
+    logDurations1 <- log10(data1$Duration[data1$Transaction == transactionType])
+    logDurations2 <- log10(data2$Duration[data2$Transaction == transactionType])
     
     # skip if have less than 3 samples, as density function won't work otherwise
     if(length(logDurations1) <= 2 || length(logDurations2) <= 2) {
