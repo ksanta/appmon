@@ -3,3 +3,5 @@
 .RData
 .Rapp.history
 histograms
+monitor*log
+monitor*processed
