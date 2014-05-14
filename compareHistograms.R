@@ -24,16 +24,18 @@ compareHistograms <- function(file1, file2) {
                         next()
                 }
                 
-                #TODO: stop this from plotting
-                hist1 <- hist(logDurations1)
-                hist2 <- hist(logDurations2)
+                hist1 <- hist(logDurations1, plot=FALSE)
+                hist2 <- hist(logDurations2, plot=FALSE)
 
+                maxCounts <- max(hist1$counts, hist2$counts)
+                
                 # open PNG graphics device
                 print(paste(index, "=", transactionType))
                 png(filename=paste("histograms/", index, ".png", sep=""), width=600, height=600)
                 
                 # build up the graph
-                plot(hist1, col=rgb(1,0,0,1/4), main=transactionType, xlab="Log Duration (millisecs)", xlim=c(0,5), type="n")
+                plot(hist1, col=rgb(1,0,0,1/4), main=transactionType, xlab="Log Duration (millisecs)", 
+                     xlim=c(0,5), ylim=c(0, maxCounts), type="n")
                 lines(hist1, col=rgb(1,0,0,1/4))
                 lines(hist2, col=rgb(0,0,1,1/4))
                 legend("topright", lty=1, c(file1, file2), col=c("red", "blue"))
