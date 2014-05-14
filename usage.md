@@ -29,4 +29,4 @@ Would be great to be able to answer these questions:
 * What is the SessionId for a sample long running transaction type?
 * What does the grade of service look like over time of day for a transaction type?
   * Function takes file, transaction type, GoS percentage
-
+* Can we generate the histogram graphs for particular times in the day?
