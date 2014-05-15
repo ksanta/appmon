@@ -1,8 +1,8 @@
 # Loads 2 monitor log files and generates a histogram for each transaction type
-compareHistograms <- function(file1, file2) {
+compareHistograms <- function(file1, file2, startHour = 0, endHour = 24) {
         source("monitorLogFile.R")
-        data1 <- monitorLogFile(file1)
-        data2 <- monitorLogFile(file2)
+        data1 <- monitorLogFile(file1, startHour, endHour)
+        data2 <- monitorLogFile(file2, startHour, endHour)
         
         if(file.exists("histograms")) {
                 graphs <- list(list.files("histograms", full.names=TRUE))
