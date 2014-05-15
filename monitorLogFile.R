@@ -1,5 +1,5 @@
 ## Loads a monitor log file.  Attempts to load a .processed file first, to speed things up
-monitorLogFile <- function(filename) {
+monitorLogFile <- function(filename, startHour = 0, endHour = 24) {
         library(data.table)
         
         # Check if processed file already exists and try loading that - for speed
@@ -9,6 +9,9 @@ monitorLogFile <- function(filename) {
                 
                 data <- read.csv(file=processedFileName, header=TRUE, 
                                  colClasses=c("character", "POSIXct", "POSIXct", "character", "factor", "factor", "numeric"))
+                
+                data <- data[hour(data$Start.Time) >= startHour & hour(data$Start.Time) < endHour,]
+                
                 # Easier to work with data.tables downstream
                 DT <- data.table(data)
                 setkey(DT, Transaction)
@@ -88,6 +91,6 @@ monitorLogFile <- function(filename) {
         print("Saving processed monitor log file")
         write.csv(result, file = processedFileName)
         
-        # return
-        result
+        # Return, filtered by hour
+        result[hour(result$Start.Time) >= startHour & hour(result$Start.Time) < endHour,]
 }
