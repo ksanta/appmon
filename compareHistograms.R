@@ -1,9 +1,12 @@
 # Loads 2 monitor log files and generates a histogram for each transaction type
 compareHistograms <- function(file1, file2, startHour = 0, endHour = 24) {
         source("monitorLogFile.R")
+        
+        # Read in the 2 monitor log files
         data1 <- monitorLogFile(file1, startHour, endHour)
         data2 <- monitorLogFile(file2, startHour, endHour)
         
+        # Delete all existing graphs if they exist
         if(file.exists("histograms")) {
                 graphs <- list(list.files("histograms", full.names=TRUE))
                 do.call(file.remove,graphs)
@@ -19,7 +22,7 @@ compareHistograms <- function(file1, file2, startHour = 0, endHour = 24) {
                 logDurations2 <- data2[transactionType, log10(Duration)]$V1
                 
                 # skip if have less than 3 samples, as histogram won't work otherwise
-                if(length(logDurations1) <= 2 || length(logDurations2) <= 2) {
+                if(length(logDurations1) < 3 || length(logDurations2) < 3) {
                         print(paste(index, "= (SKIPPED) ", transactionType))
                         next()
                 }

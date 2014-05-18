@@ -10,7 +10,7 @@ monitorLogFile <- function(filename, startHour = 0, endHour = 24) {
                 data <- read.csv(file=processedFileName, header=TRUE, 
                                  colClasses=c("character", "POSIXct", "POSIXct", "character", "factor", "factor", "numeric"))
                 
-                data <- data[hour(data$Start.Time) >= startHour & hour(data$Start.Time) < endHour,]
+                data <- subset(data, hour(Start.Time) >= startHour & hour(Start.Time) < endHour)
                 
                 # Easier to work with data.tables downstream
                 DT <- data.table(data)
@@ -32,7 +32,8 @@ monitorLogFile <- function(filename, startHour = 0, endHour = 24) {
         transaction <- character(numberOfRecords)
         user <- character(numberOfRecords)
         
-        collectValues = function(element) {
+        # This function will identify the key and set the value in the correct vector
+        collectValues = function(element, lineIndex) {
                 key <- element[1]
                 value <- element[2]
                 if(is.na(key)) {
@@ -60,7 +61,7 @@ monitorLogFile <- function(filename, startHour = 0, endHour = 24) {
                 # split returns a LIST of key/value paired VECTORS
                 keyValuePairList <- strsplit(line, "=")
                 
-                lapply(keyValuePairList, collectValues)
+                lapply(keyValuePairList, collectValues, lineIndex)
         }
         
         print("Converting")
@@ -69,7 +70,7 @@ monitorLogFile <- function(filename, startHour = 0, endHour = 24) {
         startTime <- strptime(startTime, "%Y-%m-%d %H:%M:%OS")
         endTime <- strptime(endTime, "%Y-%m-%d %H:%M:%OS")
         
-        # calculate duration vector
+        # calculate duration in milliseconds
         dateDiffs <- difftime(endTime, startTime, units = "secs")
         durationsAsSeconds <- as.double(dateDiffs)
         durationsAsMillis <- as.integer(durationsAsSeconds * 1000)
@@ -91,6 +92,6 @@ monitorLogFile <- function(filename, startHour = 0, endHour = 24) {
         print("Saving processed monitor log file")
         write.csv(result, file = processedFileName)
         
-        # Return, filtered by hour
-        result[hour(result$Start.Time) >= startHour & hour(result$Start.Time) < endHour,]
+        # Filter by hour and return
+        subset(result, hour(Start.Time) >= startHour & hour(Start.Time) < endHour)
 }
