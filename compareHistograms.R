@@ -34,7 +34,7 @@ compareHistograms <- function(file1, file2, startHour = 0, endHour = 24) {
     
     # Build up the graph
     plot <- ggplot(data=data[transactionType], mapping=aes(x=Duration, fill=Filename))
-    histogram <- geom_histogram(alpha=0.5, binwidth=0.05)
+    histogram <- geom_histogram(alpha=0.5, binwidth=0.05, position="identity")
     labels <- labs(title=transactionType, y="Count")
     
     plot <- plot + histogram + scale_x_log10() + labels
