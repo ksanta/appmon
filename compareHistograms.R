@@ -33,11 +33,12 @@ compareHistograms <- function(file1, file2, startHour = 0, endHour = 24) {
     print(paste(index, "=", transactionType))
     
     # Build up the graph
-    plot <- ggplot(data=data[transactionType], mapping=aes(x=Duration, fill=Filename))
+    ggp <- ggplot(data=data[transactionType], mapping=aes(x=Duration, fill=Filename))
     histogram <- geom_histogram(alpha=0.5, binwidth=0.05, position="identity")
-    labels <- labs(title=transactionType, y="Count")
+    labels <- labs(title=transactionType, y="Count", x="Duration (milliseconds)")
+    theme <- theme(legend.position="bottom", legend.direction="vertical", plot.title = element_text(size = rel(0.5)))
     
-    plot <- plot + histogram + scale_x_log10() + labels
+    plot <- ggp + histogram + scale_x_log10() + labels + theme
     
     ggsave(plot=plot, filename=paste("histograms/", index, ".png", sep=""))
   }
