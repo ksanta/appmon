@@ -32,13 +32,18 @@ compareHistograms <- function(file1, file2, startHour = 0, endHour = 24) {
     
     print(paste(index, "=", transactionType))
     
+    median1 <- median(data[Filename==file1 & Transaction==transactionType]$Duration)
+    median2 <- median(data[Filename==file2 & Transaction==transactionType]$Duration)
+    
     # Build up the graph
     ggp <- ggplot(data=data[transactionType], mapping=aes(x=Duration, fill=Filename))
     histogram <- geom_histogram(alpha=0.5, binwidth=0.05, position="identity")
     labels <- labs(title=transactionType, y="Count", x="Duration (milliseconds)")
     theme <- theme(legend.position="bottom", legend.direction="vertical", plot.title = element_text(size = rel(0.5)))
+    vline.data <- data.frame(xint=c(median1, median2), grp=letters[1:2])
+    median.lines <- geom_vline(data=vline.data, mapping=aes(xintercept = xint,colour = grp), size=2)
     
-    plot <- ggp + histogram + scale_x_log10() + labels + theme
+    plot <- ggp + histogram + scale_x_log10() + labels + theme + median.lines
     
     ggsave(plot=plot, filename=paste("histograms/", index, ".png", sep=""))
   }
