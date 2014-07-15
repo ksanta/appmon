@@ -11,7 +11,7 @@ plotCountsOverTime <- function(file, startHour = 0, endHour = 24) {
   # Create a per minute time sequence from start to end
   startTime <- data[1]$Start.Time
   endTime <- data[nrow(data)]$Start.Time
-  timeBreaks <- seq(from=startTime, to=endTime, by="min")
+  timeBreaks <- seq.POSIXt(from=startTime, to=endTime, by="5 min")
 
   # Create a vector of factors which will be used to "bin" each transaction
   groupingFactors <- cut(data$Start.Time, timeBreaks)
@@ -19,10 +19,32 @@ plotCountsOverTime <- function(file, startHour = 0, endHour = 24) {
   # Attach the grouping factors to the data table
   data[,grouping:=groupingFactors]
   
-  # Create table of counts per time interval
-  groupedData <- data[, length(Duration), by=grouping]
-  setnames(groupedData, c("grouping", "V1"), c("Time", "Count"))
+  # TODO: improve this by making it a function call
+  # Delete all existing graphs if they exist
+  if(file.exists("arrivalRates")) {
+    graphs <- list(list.files("arrivalRates", full.names=TRUE))
+    do.call(file.remove,graphs)
+  } else {
+    dir.create("arrivalRates")
+  }
   
-  ggplot(data=groupedData, mapping=aes(x=Time, y=Count)) + geom_point() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  transactionTypes <- levels(data$Transaction)
+  
+  for(index in seq_along(transactionTypes)) {
+    transactionType <- transactionTypes[index]
+    print(paste(index, "=", transactionType))
+  
+    # Create table of counts per time interval
+    groupedData <- data[transactionType, length(Duration), by=grouping]
+    setnames(groupedData, c("grouping", "V1"), c("Time", "Count"))
+  
+    ggp <- ggplot(data=groupedData, mapping=aes(x=Time, y=Count))
+    labels <- labs(title=transactionType, y="Count", x="Time")
+    theme <- theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
+        plot.title = element_text(size = rel(0.75)))
+    
+    plot <- ggp + labels + geom_point() + theme
+    
+    ggsave(plot=plot, filename=paste("arrivalRates/", index, ".png", sep=""))
+  }
 }
