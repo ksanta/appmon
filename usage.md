@@ -13,6 +13,11 @@ install.packages("ggplot2")
 Download a copy of a few monitor log files.
 Use setwd() to set the working directory to where the R files are kept.
 
+To make a function available to be run (for example, compareHistograms):
+* Click on the _files_ tab in the bottom right window pane.
+* Click on the file for the function you want to run. It will open in the top left editor window.
+* Click on the _source_ button to load it into the environment, seen in the top right window.
+
 Generate graphs
 ---------------
 To generate probability density graphs for each transaction type:
