@@ -39,7 +39,7 @@ compareHistograms <- function(file1, file2, startHour = 0, endHour = 24) {
     ggp <- ggplot(data=data[transactionType], mapping=aes(x=Duration, fill=Filename))
     histogram <- geom_histogram(alpha=0.5, binwidth=0.05, position="identity")
     labels <- labs(title=transactionType, y="Count", x="Duration (milliseconds)")
-    theme <- theme(legend.position="bottom", legend.direction="vertical", plot.title = element_text(size = rel(0.5)))
+    theme <- theme(legend.position="bottom", legend.direction="vertical", plot.title = element_text(size = rel(0.75)))
     vline.data <- data.frame(xint=c(median1, median2), grp=letters[1:2])
     median.lines <- geom_vline(data=vline.data, mapping=aes(xintercept = xint,colour = grp), size=2)
     
