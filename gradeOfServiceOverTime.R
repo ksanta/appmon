@@ -1,7 +1,7 @@
 # TODO: write a version which compares the transaction arrival rate per transaction
 # between 2 monitor log files
 
-plotCountsOverTime <- function(file, startHour = 0, endHour = 24) {
+gradeOfServiceOverTime <- function(file, quantile=0.95, startHour = 0, endHour = 24) {
   source("monitorLogFile.R")
   library(ggplot2)
   
@@ -21,11 +21,11 @@ plotCountsOverTime <- function(file, startHour = 0, endHour = 24) {
   
   # TODO: improve this by making it a function call
   # Delete all existing graphs if they exist
-  if(file.exists("arrivalRates")) {
-    graphs <- list(list.files("arrivalRates", full.names=TRUE))
+  if(file.exists("quantiles")) {
+    graphs <- list(list.files("quantiles", full.names=TRUE))
     do.call(file.remove,graphs)
   } else {
-    dir.create("arrivalRates")
+    dir.create("quantiles")
   }
   
   transactionTypes <- levels(data$Transaction)
@@ -35,16 +35,16 @@ plotCountsOverTime <- function(file, startHour = 0, endHour = 24) {
     print(paste(index, "=", transactionType))
   
     # Create table of counts per time interval
-    groupedData <- data[transactionType, length(Duration), by=grouping]
+    groupedData <- data[transactionType, quantile(Duration, quantile), by=grouping]
     setnames(groupedData, c("grouping", "V1"), c("Time", "Count"))
   
     ggp <- ggplot(data=groupedData, mapping=aes(x=Time, y=Count))
-    labels <- labs(title=transactionType, y="Count", x="Time")
+    labels <- labs(title=transactionType, y="Duration", x="Time")
     theme <- theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
         plot.title = element_text(size = rel(0.75)))
     
     plot <- ggp + labels + geom_point() + theme
     
-    ggsave(plot=plot, filename=paste("arrivalRates/", index, ".png", sep=""))
+    ggsave(plot=plot, filename=paste("quantiles/", index, ".png", sep=""))
   }
 }
