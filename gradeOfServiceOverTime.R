@@ -36,7 +36,7 @@ gradeOfServiceOverTime <- function(file, quantile=0.95, startHour = 0, endHour =
     print(paste(index, "=", transactionType))
     
     # Create table of quantiles per time interval
-    groupedData <- data[transactionType, quantile(Duration, quantile), by=grouping]
+    groupedData <- data[transactionType, quantile(Duration, quantile, na.rm=TRUE), by=grouping]
     setnames(groupedData, c("grouping", "V1"), c("Time", "Quantile"))
     
     # Convert the x-axis data series from factors to time, so they plot much better.
