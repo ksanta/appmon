@@ -4,6 +4,7 @@
 
 arrivalRateOverTime <- function(file, startHour = 0, endHour = 24, binPeriod = "5 min", combineFiles = FALSE) {
   source("multiMonitorLogFile.R")
+  source("commonFunctions.R")
   library(ggplot2)
   library(scales)
   
@@ -37,14 +38,8 @@ arrivalRateOverTime <- function(file, startHour = 0, endHour = 24, binPeriod = "
   # Convert the x-axis data series from factors to time, so they plot much better.
   groupedData[,DateTime:=as.POSIXct(as.character(Time))]
 
-  # TODO: improve this by making it a function call
   # Delete all existing graphs if they exist
-  if(file.exists("arrivalRates")) {
-    graphs <- list(list.files("arrivalRates", full.names=TRUE))
-    do.call(file.remove,graphs)
-  } else {
-    dir.create("arrivalRates")
-  }
+  createOrEmptyDirectory("arrivalRates")
   
   transactionTypes <- levels(groupedData$Transaction)
   

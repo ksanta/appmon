@@ -3,6 +3,7 @@
 
 gradeOfServiceOverTime <- function(file, quantile=0.95, startHour = 0, endHour = 24, binPeriod = "5 min", combineFiles = FALSE) {
   source("multiMonitorLogFile.R")
+  source("commonFunctions.R")
   library(ggplot2)
   library(scales)
   
@@ -36,14 +37,8 @@ gradeOfServiceOverTime <- function(file, quantile=0.95, startHour = 0, endHour =
   # Convert the x-axis data series from factors to time, so they plot much better.
   groupedData[,DateTime:=as.POSIXct(as.character(Time))]
   
-  # TODO: improve this by making it a function call
   # Delete all existing graphs if they exist
-  if(file.exists("quantiles")) {
-    graphs <- list(list.files("quantiles", full.names=TRUE))
-    do.call(file.remove,graphs)
-  } else {
-    dir.create("quantiles")
-  }
+  createOrEmptyDirectory("quantiles")
   
   transactionTypes <- levels(data$Transaction)
   

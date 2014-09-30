@@ -1,6 +1,7 @@
 # Loads 2 monitor log files and generates a histogram for each transaction type
 compareHistograms <- function(file1, file2, startHour = 0, endHour = 24, percentile = 95) {
   source("monitorLogFile.R")
+  source("commonFunctions.R")
   library(ggplot2)
   
   # Read in the 2 monitor log files
@@ -12,12 +13,7 @@ compareHistograms <- function(file1, file2, startHour = 0, endHour = 24, percent
   setkey(x=data, Transaction)
   
   # Delete all existing graphs if they exist
-  if(file.exists("histograms")) {
-    graphs <- list(list.files("histograms", full.names=TRUE))
-    do.call(file.remove,graphs)
-  } else {
-    dir.create("histograms")
-  }
+  createOrEmptyDirectory("histograms")
   
   # Make sure to filter out transaction types which might have no counts as part of time filtering
   transactionCounts <- summary(data1$Transaction)
