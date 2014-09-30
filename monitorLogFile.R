@@ -10,10 +10,10 @@ monitorLogFile <- function(filename, startHour = 0, endHour = 24) {
   # Check if processed file already exists and try loading that - for speed
   processedFileName <- paste(filename, ".processed", sep="")
   if(file.exists(processedFileName)) {
-    print("Loading processed file")
+    print(paste("Loading processed file:", filename))
     
     data <- read.csv(file=processedFileName, header=TRUE, 
-                     colClasses=c("character", "POSIXct", "POSIXct", "character", "factor", "factor", "numeric"))
+                     colClasses=c("character", "POSIXct", "POSIXct", "character", "factor", "factor", "numeric", "factor"))
     
     data <- subset(data, hour(Start.Time) >= startHour & hour(Start.Time) < endHour)
     
@@ -23,10 +23,11 @@ monitorLogFile <- function(filename, startHour = 0, endHour = 24) {
     
     # Slight massaging
     DT$X <- NULL
+    
     return(DT)
   }
   
-  print("Reading file")
+  print(paste("Reading and processing file:", filename))
   data <- read.csv(file=filename, header=FALSE, stringsAsFactors=FALSE, fill=TRUE,
                    colClasses=c("character","character","character","character","character","character"))
   
@@ -56,8 +57,6 @@ monitorLogFile <- function(filename, startHour = 0, endHour = 24) {
     }
   }
   
-  print("Processing")
-  
   for(lineIndex in 1:numberOfRecords) {
     # This is the most efficient way I could find to read a line from the data frame
     line <- c(data[lineIndex,1], data[lineIndex,2], data[lineIndex,3],
@@ -68,8 +67,6 @@ monitorLogFile <- function(filename, startHour = 0, endHour = 24) {
     
     lapply(keyValuePairList, collectValues, lineIndex)
   }
-  
-  print("Converting")
   
   # convert times to time types
   startTime <- strptime(startTime, "%Y-%m-%d %H:%M:%OS")
@@ -84,19 +81,20 @@ monitorLogFile <- function(filename, startHour = 0, endHour = 24) {
   transaction <- as.factor(transaction)
   user <- as.factor(user)
   
-  print("Building data frame")
-  
   result <- data.frame(Start.Time=startTime, End.Time=endTime,Session.Id=sessionId,Transaction=transaction,
                        User=user, Duration=durationsAsMillis, stringsAsFactors=FALSE)
   
   # Tried and failed to create data.table directly. Don't know why it fails??
   result <- data.table(result)
   setkey(result, Transaction)
-  
+
+  # Add filename column. Create as factor for easier grouping later on.
+  result[,Filename:=as.factor(filename)]
+    
   # Write to file so it's quicker to load next time
-  print("Saving processed monitor log file")
+  print("Saving processed file for faster loading next time")
   write.csv(result, file = processedFileName)
-  
+
   # Filter by hour and return
   subset(result, hour(Start.Time) >= startHour & hour(Start.Time) < endHour)
 }
