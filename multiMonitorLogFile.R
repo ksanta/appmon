@@ -12,6 +12,11 @@ multiMonitorLogFile <- function (fileRegExp, startHour = 0, endHour = 24) {
   # pattern matching well when listing files
   matchedFiles <- Sys.glob(fileRegExp)
 
+  # Stop when no files are matched
+  if(length(matchedFiles) == 0) {
+    stop(paste0("No files matched using '",fileRegExp,"'"))
+  }
+  
   print(paste("Matched:", matchedFiles))
   
   multiMonitorLogFile <- NULL
