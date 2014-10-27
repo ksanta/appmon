@@ -7,6 +7,9 @@ multiOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
   library(ggplot2)
   library(scales)
   
+  # Directory where the images will be saved (no trailing slash)
+  directory <- "graphsOverTime"
+  
   # Read in the monitor log file into a data table
   data <- multiMonitorLogFile(file, startHour, endHour)
 
@@ -35,15 +38,15 @@ multiOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
   setnames(groupedData, c("V1","V2"), c("Count","GoS"))
   
   # Convert the x-axis data series from factors to time, so they plot much better.
-  groupedData[,DateTime:=as.POSIXct(as.character(Time))]
+  groupedData[,Time:=as.POSIXct(as.character(Time))]
 
   # TODO: improve this by making it a function call
   # Delete all existing graphs if they exist
-  if(file.exists("arrivalRates")) {
-    graphs <- list(list.files("arrivalRates", full.names=TRUE))
+  if(file.exists(directory)) {
+    graphs <- list(list.files(directory, full.names=TRUE))
     do.call(file.remove,graphs)
   } else {
-    dir.create("arrivalRates")
+    dir.create(directory)
   }
   
   transactionTypes <- levels(groupedData$Transaction)
@@ -61,14 +64,16 @@ multiOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
       print("Skipping this one because there are not enough time samples to plot")
       next
     }
+
+    # Melt the Count and GoS columns into variables for easier graphing
+    meltedData <- melt(graphData, measure.vars = c("Count", "GoS"))
     
-    ggp <- ggplot(data=graphData)
+    ggp <- ggplot(data=meltedData, mapping=aes(x=Time, y=value, colour=Filename))
+
+    # Plot multiple graphs per image
+    facets <- facet_grid(variable ~ ., scales="free")
     
-    countSeries <- geom_bar(mapping=aes(x=DateTime, y=Count, colour=Filename), stat="identity")
-    
-    gosSeries <- geom_line(mapping=aes(x=DateTime, y=GoS, colour=Filename))
-    
-    labels <- labs(title=transactionType, y="Count", x="Time")
+    labels <- labs(title=transactionType, y="", x="Time")
     
     theme <- theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
                    plot.title = element_text(size = rel(0.75)), legend.position="bottom",
@@ -76,8 +81,8 @@ multiOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
     
     timescale <- scale_x_datetime(breaks=date_breaks("1 hour"), minor_breaks=date_breaks("10 min"))
     
-    plot <- ggp + countSeries + gosSeries + labels + theme + expand_limits(y = 0) + timescale
+    plot <- ggp + facets + geom_line() + labels + theme + expand_limits(y = 0) + timescale
     
-    ggsave(plot=plot, filename=paste("arrivalRates/", index, ".png", sep=""))
+    ggsave(plot=plot, filename=paste0(directory, "/", index, ".png"))
   }
 }
