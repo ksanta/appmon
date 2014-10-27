@@ -6,6 +6,7 @@ multiOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
   source("multiMonitorLogFile.R")
   library(ggplot2)
   library(scales)
+  library(reshape2)
   
   # Directory where the images will be saved (no trailing slash)
   directory <- "graphsOverTime"
