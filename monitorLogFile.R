@@ -8,21 +8,18 @@ monitorLogFile <- function(filename, startHour = 0, endHour = 24) {
   }
   
   # Check if processed file already exists and try loading that - for speed
-  processedFileName <- paste0(filename, ".processed")
+  processedFileName <- paste(filename, ".processed", sep="")
   if(file.exists(processedFileName)) {
     print(paste("Loading processed file:", filename))
     
     data <- read.csv(file=processedFileName, header=TRUE, 
-                     colClasses=c("character", "POSIXct", "POSIXct", "character", "factor", "factor", "numeric", "factor"))
+                     colClasses=c("POSIXct", "POSIXct", "character", "factor", "factor", "numeric", "factor"))
     
     data <- subset(data, hour(Start.Time) >= startHour & hour(Start.Time) < endHour)
     
     # Easier to work with data.tables downstream
     DT <- data.table(data)
     setkey(DT, Transaction)
-    
-    # Slight massaging
-    DT$X <- NULL
     
     return(DT)
   }
@@ -93,7 +90,7 @@ monitorLogFile <- function(filename, startHour = 0, endHour = 24) {
     
   # Write to file so it's quicker to load next time
   print("Saving processed file for faster loading next time")
-  write.csv(result, file = processedFileName)
+  write.csv(result, file = processedFileName, row.names = FALSE)
 
   # Filter by hour and return
   subset(result, hour(Start.Time) >= startHour & hour(Start.Time) < endHour)
