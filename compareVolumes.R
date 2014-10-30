@@ -1,10 +1,10 @@
 compareVolumes <- function(file1, file2, startHour = 0, endHour = 24) {
   library(plyr)
-  source("monitorLogFile.R")
+  source("multiMonitorLogFile.R")
   
   # Read in the 2 monitor log files
-  data1 <- monitorLogFile(file1, startHour, endHour)
-  data2 <- monitorLogFile(file2, startHour, endHour)
+  data1 <- multiMonitorLogFile(file1, startHour, endHour)
+  data2 <- multiMonitorLogFile(file2, startHour, endHour)
   
   # Calculate counts and average durations per transaction type for each file
   calc1 <- data1[, list(count=length(Duration)), by=Transaction]
