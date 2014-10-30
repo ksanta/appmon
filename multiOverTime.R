@@ -35,8 +35,11 @@ multiOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
   setkey(data, Filename, Transaction, Time)
   
   # Group counts by Filename, Transaction & TimeSlot
-  groupedData <- data[, list(length(Duration), quantile(Duration, quantile, na.rm=TRUE)), by=list(Filename,Transaction,Time)]
-  setnames(groupedData, c("V1","V2"), c("Count","GoS"))
+  # Quick refresher on data.table[i, j, by]:
+  # i - selects the rows
+  # j - calculated columns
+  # by - grouping columns
+  groupedData <- data[, list(Count=length(Duration), GoS=quantile(Duration, quantile, na.rm=TRUE)), by=list(Filename,Transaction,Time)]
   
   # Convert the x-axis data series from factors to time, so they plot much better.
   groupedData[,Time:=as.POSIXct(as.character(Time))]
