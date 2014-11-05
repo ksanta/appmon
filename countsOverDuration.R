@@ -1,13 +1,19 @@
-countsOverDuration <- function(file1, startHour = 0, endHour = 24, percentile = 95) {
+countsOverDuration <- function(file, startHour = 0, endHour = 24, percentile = 95, combineFiles = FALSE) {
   source("multiMonitorLogFile.R")
   source("commonFunctions.R")
   library(ggplot2)
   
   # Read in the monitor log file
-  data <- multiMonitorLogFile(file1, startHour, endHour)
+  data <- multiMonitorLogFile(file, startHour, endHour)
   
+  # Flatten the filenames if we don't want to split by filenames
+  # Must flatten filenames BEFORE grouping
+  if(combineFiles == TRUE) {
+    data$Filename <- file
+  }
+
   # Set key for fast lookups later on
-  setkey(x=data, Transaction)
+  setkey(data, Transaction)
   
   # Delete all existing graphs if they exist
   createOrEmptyDirectory("histograms")
@@ -26,8 +32,8 @@ countsOverDuration <- function(file1, startHour = 0, endHour = 24, percentile = 
     histogram <- geom_histogram(alpha=0.5, binwidth=0.05, position="identity")
     labels <- labs(title=transactionType, y="Count", x="Duration (milliseconds)")
     theme <- theme(legend.position="bottom", legend.direction="vertical", plot.title = element_text(size = rel(0.5)))
-
-    #median1 <- quantile(data[Filename==file1 & Transaction==transactionType]$Duration, probs = percentile/100)
+    
+    #median1 <- quantile(data[Filename==file & Transaction==transactionType]$Duration, probs = percentile/100)
     #vline.data <- data.frame(xint=c(median1), grp=letters[1])
     #median.lines <- geom_vline(data=vline.data, mapping=aes(xintercept = xint,colour = grp), size=2)
     
