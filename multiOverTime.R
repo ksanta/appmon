@@ -44,14 +44,8 @@ multiOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
   # Convert the x-axis data series from factors to time, so they plot much better.
   groupedData[,Time:=as.POSIXct(as.character(Time))]
 
-  # TODO: improve this by making it a function call
   # Delete all existing graphs if they exist
-  if(file.exists(directory)) {
-    graphs <- list(list.files(directory, full.names=TRUE))
-    do.call(file.remove,graphs)
-  } else {
-    dir.create(directory)
-  }
+  createOrEmptyDirectory(directory)
   
   transactionTypes <- levels(groupedData$Transaction)
   
@@ -61,7 +55,7 @@ multiOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
     
     # Subset only for the transaction type
     graphData <- groupedData[Transaction == transactionType]
-        
+
     # Exclude transaction types which don't have a minimum number of time samples
     # This is a preference, not a technical limitation.  Otherwise can generate lots of empty graphs.
     if(nrow(graphData) < 5) {

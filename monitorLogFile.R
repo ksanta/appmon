@@ -8,7 +8,7 @@ monitorLogFile <- function(filename, startHour = 0, endHour = 24) {
   }
   
   # Check if processed file already exists and try loading that - for speed
-  processedFileName <- paste(filename, ".processed", sep="")
+  processedFileName <- paste0(filename, ".processed")
   if(file.exists(processedFileName)) {
     print(paste("Loading processed file:", filename))
     
