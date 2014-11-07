@@ -1,12 +1,13 @@
-# Loads 2 monitor log files and generates a histogram for each transaction type
+# Loads 2 sets of monitor log files and compares the histograms for each transaction type
 compareHistograms <- function(file1, file2, startHour = 0, endHour = 24, percentile = 95) {
-  source("monitorLogFile.R")
-  source("commonFunctions.R")
+  source("multiMonitorLogFile.R")
   library(ggplot2)
   
-  # Read in the 2 monitor log files
-  data1 <- monitorLogFile(file1, startHour, endHour)
-  data2 <- monitorLogFile(file2, startHour, endHour)
+  # Read in the 2 sets of monitor log files
+  data1 <- multiMonitorLogFile(file1, startHour, endHour)
+  data1$Filename <- file1  # Flatten multiple matched files into one dataset
+  data2 <- multiMonitorLogFile(file2, startHour, endHour)
+  data2$Filename <- file2  # Flatten multiple matched files into one dataset
   
   # Combine two data tables into one
   data <- rbind(data1, data2)
@@ -34,10 +35,9 @@ compareHistograms <- function(file1, file2, startHour = 0, endHour = 24, percent
     theme <- theme(legend.position="bottom", legend.direction="vertical", plot.title = element_text(size = rel(0.5)))
     vline.data <- data.frame(xint=c(median1, median2), grp=letters[1:2])
     median.lines <- geom_vline(data=vline.data, mapping=aes(xintercept = xint,colour = grp), size=2)
-    # annotation_logticks
     
-    plot <- ggp + histogram + scale_x_log10() + labels + theme + median.lines
+    plot <- ggp + histogram + scale_x_log10() + labels + theme + median.lines + annotation_logticks(sides = "b")
     
-    ggsave(plot=plot, filename=paste("histograms/", index, ".png", sep=""))
+    ggsave(plot=plot, filename=paste0("histograms/", index, ".png"))
   }
 }
