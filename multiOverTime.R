@@ -14,7 +14,7 @@ multiOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
   
   # Read in the monitor log file into a data table
   data <- multiMonitorLogFile(file, startHour, endHour)
-
+  
   # Flatten the filenames if we don't want to split by filenames
   # Must flatten filenames BEFORE grouping
   if(combineFiles == TRUE) {
@@ -31,7 +31,7 @@ multiOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
   
   # Attach the grouping factors to the data table
   data[,Time:=timeSlots]
-
+  
   # Require keying of data table for grouping
   setkey(data, Filename, Transaction, Time)
   
@@ -40,11 +40,14 @@ multiOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
   # i - selects the rows
   # j - calculated columns
   # by - grouping columns
-  groupedData <- data[, list(Count=length(Duration), GoS=quantile(Duration, quantile, na.rm=TRUE)), by=list(Filename,Transaction,Time)]
+  groupedData <- data[, list(Count=length(Duration), GoS=quantile(Duration, quantile, na.rm=TRUE), Median=median(Duration, na.rm=TRUE)), by=list(Filename,Transaction,Time)]
+  
+  # Convert median to integer (all values need to be the same type before melting)
+  groupedData[,Median:=as.integer(Median)]
   
   # Convert the x-axis data series from factors to time, so they plot much better.
   groupedData[,Time:=as.POSIXct(as.character(Time))]
-
+  
   # Delete all existing graphs if they exist
   createOrEmptyDirectory(directory)
   
@@ -56,19 +59,19 @@ multiOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
     
     # Subset only for the transaction type
     graphData <- groupedData[Transaction == transactionType]
-
+    
     # Exclude transaction types which don't have a minimum number of time samples
     # This is a preference, not a technical limitation.  Otherwise can generate lots of empty graphs.
     if(nrow(graphData) < 5) {
       print("Skipping this one because there are not enough time samples to plot")
       next
     }
-
+    
     # Melt the Count and GoS columns into variables for easier graphing
-    meltedData <- melt(graphData, measure.vars = c("Count", "GoS"))
+    meltedData <- melt(graphData, measure.vars = c("Count", "GoS", "Median"))
     
     ggp <- ggplot(data=meltedData, mapping=aes(x=Time, y=value, colour=Filename))
-
+    
     # Plot multiple graphs per image
     facets <- facet_grid(variable ~ ., scales="free")
     
