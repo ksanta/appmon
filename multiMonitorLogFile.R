@@ -1,42 +1,67 @@
 # Load multiple monitor log files, based on a filename as a regular expression.
-# A single data.frame is returned with an additional column containing the filename the data was loaded from.
-# The additional column with filename is of type "factor"
 
-# Eg: to find all files for a day: "monitor-*-2014-09-23.log"
-# Eg: to find online logs for a day: "monitor-online-*-2014-09-23.log"
+# fileVector is a vector of strings.  Each element may contain wildcards, and multiple matches within 
+# each element will be combined.
 
-multiMonitorLogFile <- function (fileRegExp, startHour = 0, endHour = 24, combineFiles = FALSE) {
+# combineFiles, if TRUE, will combine all elements in the vector as if it came from one file.
+
+# Eg: c("monitor-*-2014-09-23.log")
+# Combines all monitor log files for a day into one dataset
+
+# Eg: c("monitor-online-*-2014-09-23.log")
+# Combines online monitor log files for a day
+
+# Eg: c("monitor-online-m1-2015-02-16.log", "monitor-online-m2-2015-02-16.log")
+# Loads m1 and m2 into a dataset and keeps datasets seperate
+
+multiMonitorLogFile <- function (fileVector, startHour = 0, endHour = 24, combineFiles = FALSE) {
   source("monitorLogFile.R")
 
-  # Use Sys.glob to get get a list of matched files on Windows platforms, as Windows doesn't do
-  # pattern matching well when listing files
-  matchedFiles <- Sys.glob(fileRegExp)
-
-  # Stop when no files are matched
-  if(length(matchedFiles) == 0) {
-    stop(paste0("No files matched using '",fileRegExp,"'"))
-  }
+  allMonitorLogFile <- NULL
   
-  print(paste("Matched:", matchedFiles))
-  
-  multiMonitorLogFile <- NULL
-
-  for(matchedFile in matchedFiles) {
-    newMonitorLogFile <- monitorLogFile(matchedFile, startHour, endHour)
+  for(fileExpression in fileVector) {
+    # Use Sys.glob to get get a list of matched files on Windows platforms, as Windows doesn't do
+    # pattern matching well when listing files
+    matchedFiles <- Sys.glob(fileExpression)
     
-    if(is.null(multiMonitorLogFile)) {
-      multiMonitorLogFile <- newMonitorLogFile
+    # Stop when no files are matched
+    if(length(matchedFiles) == 0) {
+      stop(paste0("No files matched using '",fileExpression,"'"))
+    }
+    
+    print(paste("Matched:", matchedFiles))
+    
+    multiMonitorLogFile <- NULL
+    
+    for(matchedFile in matchedFiles) {
+      newMonitorLogFile <- monitorLogFile(matchedFile, startHour, endHour)
+      
+      if(is.null(multiMonitorLogFile)) {
+        multiMonitorLogFile <- newMonitorLogFile
+      } else {
+        multiMonitorLogFile <- rbind(multiMonitorLogFile, newMonitorLogFile)
+      }
+    }
+    
+    # Flatten data for each fileExpression
+    multiMonitorLogFile$Filename <- fileExpression
+    multiMonitorLogFile <- droplevels(multiMonitorLogFile)
+    
+    # Attach file element to allMonitorLogFile
+    if(is.null(allMonitorLogFile)) {
+      allMonitorLogFile <- multiMonitorLogFile
     } else {
-      multiMonitorLogFile <- rbind(multiMonitorLogFile, newMonitorLogFile)
+      allMonitorLogFile <- rbind(allMonitorLogFile, multiMonitorLogFile)
     }
   }
   
-  # Flatten the filenames if user wants to aggregate data from different files together
+  # Flatten the filenames if user wants to aggregate everything into one dataset
   if(combineFiles == TRUE) {
-    multiMonitorLogFile$Filename <- fileRegExp
-    multiMonitorLogFile <- droplevels(multiMonitorLogFile)
+    combinedFilename <- paste(fileVector, collapse = ", ")
+    allMonitorLogFile$Filename <- combinedFilename
+    allMonitorLogFile <- droplevels(allMonitorLogFile)
   }
   
   # Return
-  multiMonitorLogFile
+  allMonitorLogFile
 }
