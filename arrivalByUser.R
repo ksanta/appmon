@@ -13,13 +13,7 @@ arrivalByUser <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
   directory <- "arrivalByUser"
   
   # Read in the monitor log file into a data table
-  data <- multiMonitorLogFile(file, startHour, endHour)
-  
-  # Flatten the filenames if user doesn't want to split by filenames
-  # Must flatten filenames BEFORE grouping
-  if(combineFiles == TRUE) {
-    data$Filename <- file
-  }
+  data <- multiMonitorLogFile(file, startHour, endHour, combineFiles)
   
   # Create a time sequence to group all transactions by start time
   minStartTime <- min(data[,Start.Time])
