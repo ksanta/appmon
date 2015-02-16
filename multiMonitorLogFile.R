@@ -5,7 +5,7 @@
 # Eg: to find all files for a day: "monitor-*-2014-09-23.log"
 # Eg: to find online logs for a day: "monitor-online-*-2014-09-23.log"
 
-multiMonitorLogFile <- function (fileRegExp, startHour = 0, endHour = 24) {
+multiMonitorLogFile <- function (fileRegExp, startHour = 0, endHour = 24, combineFiles = FALSE) {
   source("monitorLogFile.R")
 
   # Use Sys.glob to get get a list of matched files on Windows platforms, as Windows doesn't do
@@ -29,6 +29,12 @@ multiMonitorLogFile <- function (fileRegExp, startHour = 0, endHour = 24) {
     } else {
       multiMonitorLogFile <- rbind(multiMonitorLogFile, newMonitorLogFile)
     }
+  }
+  
+  # Flatten the filenames if user wants to aggregate data from different files together
+  if(combineFiles == TRUE) {
+    multiMonitorLogFile$Filename <- fileRegExp
+    multiMonitorLogFile <- droplevels(multiMonitorLogFile)
   }
   
   # Return
