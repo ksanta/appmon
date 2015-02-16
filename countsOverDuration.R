@@ -4,14 +4,8 @@ countsOverDuration <- function(file, startHour = 0, endHour = 24, percentile = 9
   library(ggplot2)
   
   # Read in the monitor log file
-  data <- multiMonitorLogFile(file, startHour, endHour)
+  data <- multiMonitorLogFile(file, startHour, endHour, combineFiles)
   
-  # Flatten the filenames if we don't want to split by filenames
-  # Must flatten filenames BEFORE grouping
-  if(combineFiles == TRUE) {
-    data$Filename <- file
-  }
-
   # Set key for fast lookups later on
   setkey(data, Transaction)
   
