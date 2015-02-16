@@ -13,13 +13,7 @@ multiOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
   directory <- "graphsOverTime"
   
   # Read in the monitor log file into a data table
-  data <- multiMonitorLogFile(file, startHour, endHour)
-  
-  # Flatten the filenames if we don't want to split by filenames
-  # Must flatten filenames BEFORE grouping
-  if(combineFiles == TRUE) {
-    data$Filename <- file
-  }
+  data <- multiMonitorLogFile(file, startHour, endHour, combineFiles)
   
   # Create a time sequence from start to end
   startTime <- min(data[,Start.Time])
@@ -40,10 +34,7 @@ multiOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
   # i - selects the rows
   # j - calculated columns
   # by - grouping columns
-  groupedData <- data[, list(Count=length(Duration), GoS=quantile(Duration, quantile, na.rm=TRUE), Median=median(Duration, na.rm=TRUE)), by=list(Filename,Transaction,Time)]
-  
-  # Convert median to integer (all values need to be the same type before melting)
-  groupedData[,Median:=as.integer(Median)]
+  groupedData <- data[, list(Count=length(Duration), GoS=quantile(Duration, quantile, na.rm=TRUE), Median=as.double(median(Duration, na.rm=TRUE))), by=list(Filename,Transaction,Time)]
   
   # Convert the x-axis data series from factors to time, so they plot much better.
   groupedData[,Time:=as.POSIXct(as.character(Time))]
