@@ -1,13 +1,12 @@
 # Loads 2 sets of monitor log files and compares the histograms for each transaction type
 compareHistograms <- function(file1, file2, startHour = 0, endHour = 24, percentile = 95) {
   source("multiMonitorLogFile.R")
+  source("commonFunctions.R")
   library(ggplot2)
   
   # Read in the 2 sets of monitor log files
-  data1 <- multiMonitorLogFile(file1, startHour, endHour)
-  data1$Filename <- file1  # Flatten multiple matched files into one dataset
-  data2 <- multiMonitorLogFile(file2, startHour, endHour)
-  data2$Filename <- file2  # Flatten multiple matched files into one dataset
+  data1 <- multiMonitorLogFile(file1, startHour, endHour, combineFiles = TRUE)
+  data2 <- multiMonitorLogFile(file2, startHour, endHour, combineFiles = TRUE)
   
   # Combine two data tables into one
   data <- rbind(data1, data2)
