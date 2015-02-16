@@ -2,7 +2,7 @@
 # Given filename can be a regular expression so that it matches multiple files.
 # Default grouping of transaction counts is a 5 minute interval, though this can be changed with binPeriod
 
-multiOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binPeriod = "5 min", combineFiles = FALSE) {
+graphsOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binPeriod = "5 min", combineFiles = FALSE) {
   source("multiMonitorLogFile.R")
   source("commonFunctions.R")
   library(ggplot2)
@@ -14,6 +14,19 @@ multiOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
   
   # Read in the monitor log file into a data table
   data <- multiMonitorLogFile(file, startHour, endHour, combineFiles)
+
+  # Ignore the date portion - hardcode all to same value
+  tempTimes <- as.POSIXlt(data$Start.Time)
+  tempTimes$year <- 100
+  tempTimes$mon <- 0
+  tempTimes$mday <- 1
+  data$Start.Time <- as.POSIXct(tempTimes)
+  
+  tempTimes <- as.POSIXlt(data$End.Time)
+  tempTimes$year <- 100
+  tempTimes$mon <- 0
+  tempTimes$mday <- 1
+  data$End.Time <- as.POSIXct(tempTimes)
   
   # Create a time sequence from start to end
   startTime <- min(data[,Start.Time])
@@ -72,7 +85,7 @@ multiOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
                    plot.title = element_text(size = rel(0.75)), legend.position="bottom",
                    legend.direction="vertical")
     
-    timescale <- scale_x_datetime(breaks=date_breaks("1 hour"), minor_breaks=date_breaks("10 min"))
+    timescale <- scale_x_datetime(breaks=date_breaks("1 hour"), minor_breaks=date_breaks("10 min"), labels=date_format("%H:%M"))
     
     plot <- ggp + facets + geom_line() + labels + theme + expand_limits(y = 0) + timescale
     
