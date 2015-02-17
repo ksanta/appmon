@@ -6,13 +6,16 @@
 # combineFiles, if TRUE, will combine all elements in the vector as if it came from one file.
 
 # Eg: c("monitor-*-2014-09-23.log")
-# Combines all monitor log files for a day into one dataset
+# Combines all monitor log files for a day into one dataset: m1, m2, sync and batch components
 
 # Eg: c("monitor-online-*-2014-09-23.log")
-# Combines online monitor log files for a day
+# Combines online (m1 & m2) monitor log files for 23 September
 
 # Eg: c("monitor-online-m1-2015-02-16.log", "monitor-online-m2-2015-02-16.log")
 # Loads m1 and m2 into a dataset and keeps datasets seperate
+
+# Eg: c("monitor-online-*-2015-02-16.log", "monitor-online-*-2015-02-17.log")
+# Loads combined m1 & m2 for 16 Feb and loads combined m1 & m2 for 17 Feb
 
 multiMonitorLogFile <- function (fileVector, startHour = 0, endHour = 24, combineFiles = FALSE) {
   source("monitorLogFile.R")
