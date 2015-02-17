@@ -15,7 +15,7 @@ graphsOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, bin
   # Read in the monitor log file into a data table
   data <- multiMonitorLogFile(file, startHour, endHour, combineFiles)
 
-  # Ignore the date portion - hardcode all to same value
+  # Ignore the date portion - hardcode all to same value, will be hidden when graphing
   tempTimes <- as.POSIXlt(data$Start.Time)
   tempTimes$year <- 100
   tempTimes$mon <- 0
@@ -47,7 +47,15 @@ graphsOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, bin
   # i - selects the rows
   # j - calculated columns
   # by - grouping columns
-  groupedData <- data[, list(Count=length(Duration), GoS=quantile(Duration, quantile, na.rm=TRUE), Median=as.double(median(Duration, na.rm=TRUE))), by=list(Filename,Transaction,Time)]
+  groupedDataIncomplete <- data[, list(Count=length(Duration), GoS=quantile(Duration, quantile, na.rm=TRUE), Median=as.double(median(Duration, na.rm=TRUE))), by=list(Filename,Transaction,Time)]
+
+  # Grouped data does not have values for all time samples, for example some low volume transactions 
+  # do not have transactions coming in for every time period.
+
+  # To fix, will create a data table with all combinations of keys, then merge with groupedData
+  allCombinations <- expand.grid(Filename=unique(groupedDataIncomplete$Filename), Transaction=unique(groupedDataIncomplete$Transaction), Time=as.factor(timeBreaks))
+  allCombinationsTable <- data.table(allCombinations)
+  groupedData <- merge(groupedDataIncomplete, allCombinationsTable, all=TRUE)
   
   # Convert the x-axis data series from factors to time, so they plot much better.
   groupedData[,Time:=as.POSIXct(as.character(Time))]
