@@ -56,6 +56,11 @@ graphsOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, bin
   allCombinations <- expand.grid(Filename=unique(groupedDataIncomplete$Filename), Transaction=unique(groupedDataIncomplete$Transaction), Time=as.factor(timeBreaks))
   allCombinationsTable <- data.table(allCombinations)
   groupedData <- merge(groupedDataIncomplete, allCombinationsTable, all=TRUE)
+
+  # Set NA values to zero so they plot as a zero
+  groupedData$Count[is.na(groupedData$Count)] <- 0
+  groupedData$GoS[is.na(groupedData$GoS)] <- 0
+  groupedData$Median[is.na(groupedData$Median)] <- 0
   
   # Convert the x-axis data series from factors to time, so they plot much better.
   groupedData[,Time:=as.POSIXct(as.character(Time))]
