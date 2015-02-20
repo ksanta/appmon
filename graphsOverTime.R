@@ -34,7 +34,7 @@ graphsOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, bin
   timeBreaks <- seq.POSIXt(from=startTime, to=endTime, by=binPeriod)
   
   # Create a vector of factors which will be used to "bin" each transaction
-  timeSlots <- cut(data$Start.Time, timeBreaks)
+  timeSlots <- cut(data$Start.Time, binPeriod)
   
   # Attach the grouping factors to the data table
   data[,Time:=timeSlots]
