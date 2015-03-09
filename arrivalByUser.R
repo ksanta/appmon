@@ -14,6 +14,23 @@ arrivalByUser <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
   
   # Read in the monitor log file into a data table
   data <- multiMonitorLogFile(file, startHour, endHour, combineFiles)
+
+  # Uncomment these to filter by transaction type
+#  data <- data[data$Transaction == "/cashRecyclerStatus.do"]
+#  data <- droplevels(data)
+
+  # Ignore the date portion - hardcode all to same value, will be hidden when graphing
+  tempTimes <- as.POSIXlt(data$Start.Time)
+  tempTimes$year <- 100
+  tempTimes$mon <- 0
+  tempTimes$mday <- 1
+  data$Start.Time <- as.POSIXct(tempTimes)
+  
+  tempTimes <- as.POSIXlt(data$End.Time)
+  tempTimes$year <- 100
+  tempTimes$mon <- 0
+  tempTimes$mday <- 1
+  data$End.Time <- as.POSIXct(tempTimes)
   
   # Create a time sequence to group all transactions by start time
   minStartTime <- min(data[,Start.Time])
@@ -34,8 +51,21 @@ arrivalByUser <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
   # i - selects the rows
   # j - calculated columns
   # by - grouping columns
-  groupedData <- data[, list(Count=length(Duration), GoS=quantile(Duration, quantile, na.rm=TRUE), Median=as.double(median(Duration, na.rm=TRUE))), by=list(Filename,User,Time)]
+  groupedDataIncomplete <- data[, list(Count=length(Duration), GoS=quantile(Duration, quantile, na.rm=TRUE), Median=as.double(median(Duration, na.rm=TRUE))), by=list(Filename,User,Time)]
   
+  # Grouped data does not have values for all time samples, for example some low volume transactions 
+  # do not have transactions coming in for every time period.
+  
+  # To fix, will create a data table with all combinations of keys, then merge with groupedData
+  allCombinations <- expand.grid(Filename=unique(groupedDataIncomplete$Filename), User=unique(groupedDataIncomplete$User), Time=as.factor(timeBreaks))
+  allCombinationsTable <- data.table(allCombinations)
+  groupedData <- merge(groupedDataIncomplete, allCombinationsTable, all=TRUE)
+  
+  # Set NA values to zero so they plot as a zero
+  groupedData$Count[is.na(groupedData$Count)] <- 0
+  groupedData$GoS[is.na(groupedData$GoS)] <- 0
+  groupedData$Median[is.na(groupedData$Median)] <- 0
+
   # Convert the x-axis data series from factors to time, so they plot much better.
   groupedData[,Time:=as.POSIXct(as.character(Time))]
   
@@ -72,7 +102,7 @@ arrivalByUser <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
                    plot.title = element_text(size = rel(0.75)), legend.position="bottom",
                    legend.direction="vertical")
     
-    timescale <- scale_x_datetime(breaks=date_breaks("1 hour"), minor_breaks=date_breaks("10 min"))
+    timescale <- scale_x_datetime(breaks=date_breaks("1 hour"), minor_breaks=date_breaks("10 min"), labels=date_format("%H:%M"))
     
     plot <- ggp + facets + geom_line() + labels + theme + expand_limits(y = 0) + timescale
     
