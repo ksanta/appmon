@@ -1,8 +1,8 @@
-# Creates a graph per user showing arrival rate over time.
+# Creates a set of graphs, grouped by user
 # Given filename can be a regular expression so that it matches multiple files.
 # Default grouping of transaction counts is a 5 minute interval, though this can be changed with binPeriod
 
-arrivalByUser <- function(file, startHour = 0, endHour = 24, quantile=0.95, binPeriod = "5 min", combineFiles = FALSE) {
+graphsByUser <- function(file, startHour = 0, endHour = 24, quantile=0.95, binPeriod = "5 min", combineFiles = FALSE, filterByTransaction = NULL) {
   source("multiMonitorLogFile.R")
   source("commonFunctions.R")
   library(ggplot2)
@@ -15,10 +15,12 @@ arrivalByUser <- function(file, startHour = 0, endHour = 24, quantile=0.95, binP
   # Read in the monitor log file into a data table
   data <- multiMonitorLogFile(file, startHour, endHour, combineFiles)
 
-  # Uncomment these to filter by transaction type
-#  data <- data[data$Transaction == "/cashRecyclerStatus.do"]
-#  data <- droplevels(data)
-
+  # Optionally filter down to one transaction type
+  if(!is.null(filterByTransaction)) {
+    data <- data[data$Transaction == filterByTransaction]
+    data <- droplevels(data)
+  }
+  
   # Ignore the date portion - hardcode all to same value, will be hidden when graphing
   tempTimes <- as.POSIXlt(data$Start.Time)
   tempTimes$year <- 100
