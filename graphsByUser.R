@@ -10,7 +10,7 @@ graphsByUser <- function(file, startHour = 0, endHour = 24, quantile=0.95, binPe
   library(reshape2)
   
   # Directory where the images will be saved (no trailing slash)
-  directory <- "arrivalByUser"
+  directory <- "graphsByUser"
   
   # Read in the monitor log file into a data table
   data <- multiMonitorLogFile(file, startHour, endHour, combineFiles)
