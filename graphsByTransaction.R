@@ -2,7 +2,7 @@
 # Given filename can be a regular expression so that it matches multiple files.
 # Default grouping of transaction counts is a 5 minute interval, though this can be changed with binPeriod
 
-graphsOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, binPeriod = "5 min", combineFiles = FALSE) {
+graphsByTransaction <- function(file, startHour = 0, endHour = 24, quantile=0.95, binPeriod = "5 min", combineFiles = FALSE, filterByUser = NULL) {
   source("multiMonitorLogFile.R")
   source("commonFunctions.R")
   library(ggplot2)
@@ -10,11 +10,17 @@ graphsOverTime <- function(file, startHour = 0, endHour = 24, quantile=0.95, bin
   library(reshape2)
   
   # Directory where the images will be saved (no trailing slash)
-  directory <- "graphsOverTime"
+  directory <- "graphsByTransaction"
   
   # Read in the monitor log file into a data table
   data <- multiMonitorLogFile(file, startHour, endHour, combineFiles)
 
+  # Optionally filter down to one user
+  if(!is.null(filterByUser)) {
+    data <- data[data$User == filterByUser]
+    data <- droplevels(data)
+  }
+  
   # Ignore the date portion - hardcode all to same value, will be hidden when graphing
   tempTimes <- as.POSIXlt(data$Start.Time)
   tempTimes$year <- 100
