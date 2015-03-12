@@ -1,4 +1,4 @@
-countsOverDuration <- function(file, startHour = 0, endHour = 24, percentile = 95, combineFiles = FALSE) {
+histograms <- function(file, startHour = 0, endHour = 24, combineFiles = FALSE) {
   source("multiMonitorLogFile.R")
   source("commonFunctions.R")
   library(ggplot2)
@@ -26,10 +26,6 @@ countsOverDuration <- function(file, startHour = 0, endHour = 24, percentile = 9
     histogram <- geom_histogram(alpha=0.5, binwidth=0.05, position="identity")
     labels <- labs(title=transactionType, y="Count", x="Duration (milliseconds)")
     theme <- theme(legend.position="bottom", legend.direction="vertical", plot.title = element_text(size = rel(0.5)))
-    
-    #median1 <- quantile(data[Filename==file & Transaction==transactionType]$Duration, probs = percentile/100)
-    #vline.data <- data.frame(xint=c(median1), grp=letters[1])
-    #median.lines <- geom_vline(data=vline.data, mapping=aes(xintercept = xint,colour = grp), size=2)
     
     plot <- ggp + histogram + scale_x_log10() + labels + theme + annotation_logticks(sides = "b")
     
