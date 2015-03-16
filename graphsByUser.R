@@ -2,7 +2,7 @@
 # Given filename can be a regular expression so that it matches multiple files.
 # Default grouping of transaction counts is a 5 minute interval, though this can be changed with binPeriod
 
-graphsByUser <- function(file, startHour = 0, endHour = 24, quantile=0.95, binPeriod = "5 min", combineFiles = FALSE, filterByTransaction = NULL) {
+graphsByUser <- function(file, startHour = 0, endHour = 24, quantile=0.95, binPeriod = "5 min", filterByTransaction = NULL) {
   source("multiMonitorLogFile.R")
   source("commonFunctions.R")
   library(ggplot2)
@@ -13,7 +13,7 @@ graphsByUser <- function(file, startHour = 0, endHour = 24, quantile=0.95, binPe
   directory <- "graphsByUser"
   
   # Read in the monitor log file into a data table
-  data <- multiMonitorLogFile(file, startHour, endHour, combineFiles)
+  data <- multiMonitorLogFile(file, startHour, endHour)
 
   # Optionally filter down to one transaction type
   if(!is.null(filterByTransaction)) {
@@ -34,15 +34,8 @@ graphsByUser <- function(file, startHour = 0, endHour = 24, quantile=0.95, binPe
   tempTimes$mday <- 1
   data$End.Time <- as.POSIXct(tempTimes)
   
-  # Create a time sequence to group all transactions by start time
-  minStartTime <- min(data[,Start.Time])
-  maxStartTime <- max(data[,Start.Time])
-  timeBreaks <- seq.POSIXt(from=minStartTime, to=maxStartTime, by=binPeriod)
-  
-  # Create a vector of factors which will be used to "bin" each transaction
-  timeSlots <- cut(data$Start.Time, timeBreaks)
-  
-  # Attach the grouping factors to the data table
+  # Create factors which will be used to group each transaction into time intervals
+  timeSlots <- cut(data$Start.Time, binPeriod)
   data[,Time:=timeSlots]
   
   # Require keying of data table for grouping
@@ -59,7 +52,7 @@ graphsByUser <- function(file, startHour = 0, endHour = 24, quantile=0.95, binPe
   # do not have transactions coming in for every time period.
   
   # To fix, will create a data table with all combinations of keys, then merge with groupedData
-  allCombinations <- expand.grid(Filename=unique(groupedDataIncomplete$Filename), User=unique(groupedDataIncomplete$User), Time=as.factor(timeBreaks))
+  allCombinations <- expand.grid(Filename=unique(groupedDataIncomplete$Filename), User=unique(groupedDataIncomplete$User), Time=levels(groupedDataIncomplete$Time))
   allCombinationsTable <- data.table(allCombinations)
   groupedData <- merge(groupedDataIncomplete, allCombinationsTable, all=TRUE)
   
