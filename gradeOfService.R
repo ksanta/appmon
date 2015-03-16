@@ -32,14 +32,8 @@ gradeOfService <- function(file, startHour = 0, endHour = 24, quantile=0.95, bin
   tempTimes$mday <- 1
   data$End.Time <- as.POSIXct(tempTimes)
   
-  # Create a time sequence from start to end
-  startTime <- min(data[,Start.Time])
-  endTime <- max(data[,Start.Time])
-  
-  # Create a vector of factors which will be used to "bin" each transaction
+  # Create factors which will be used to group each transaction into time intervals
   timeSlots <- cut(data$Start.Time, binPeriod)
-  
-  # Attach the grouping factors to the data table
   data[,Time:=timeSlots]
   
   # Require keying of data table for grouping
@@ -57,7 +51,7 @@ gradeOfService <- function(file, startHour = 0, endHour = 24, quantile=0.95, bin
 
   # To fix, will create a data table with all combinations of keys, then merge with groupedData
   timeBreaks <- seq.POSIXt(from=startTime, to=endTime, by=binPeriod)
-  allCombinations <- expand.grid(Filename=unique(groupedDataIncomplete$Filename), Transaction=unique(groupedDataIncomplete$Transaction), Time=as.factor(timeBreaks))
+  allCombinations <- expand.grid(Filename=unique(groupedDataIncomplete$Filename), Transaction=unique(groupedDataIncomplete$Transaction), Time=levels(groupedDataIncomplete$Time))
   allCombinationsTable <- data.table(allCombinations)
   groupedData <- merge(groupedDataIncomplete, allCombinationsTable, all=TRUE)
 
@@ -104,7 +98,7 @@ gradeOfService <- function(file, startHour = 0, endHour = 24, quantile=0.95, bin
     
     timescale <- scale_x_datetime(breaks=date_breaks("1 hour"), minor_breaks=date_breaks("10 min"), labels=date_format("%H:%M"))
     
-    plot <- ggp + facets + geom_line() + labels + theme + expand_limits(y = 0) + timescale
+    plot <- ggp + facets + geom_line(alpha=0.5) + labels + theme + expand_limits(y = 0) + timescale
     
     ggsave(plot=plot, filename=paste0(directory, "/", index, ".png"))
   }
