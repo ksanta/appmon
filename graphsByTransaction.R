@@ -2,7 +2,7 @@
 # Given filename can be a regular expression so that it matches multiple files.
 # Default grouping of transaction ArrivalRates is a 5 minute interval, though this can be changed with binPeriod
 
-graphsByTransaction <- function(file, startHour = 0, endHour = 24, quantile=0.95, binPeriod = "5 min", filterByUser = NULL) {
+graphsByTransaction <- function(file, startHour = 0, endHour = 24, binPeriod = "5 min", quantile1=0.95, quantile2=0.50, filterByUser = NULL) {
   source("multiMonitorLogFile.R")
   source("commonFunctions.R")
   library(ggplot2)
@@ -46,7 +46,7 @@ graphsByTransaction <- function(file, startHour = 0, endHour = 24, quantile=0.95
   # i - selects the rows
   # j - calculated columns
   # by - grouping columns
-  groupedDataIncomplete <- data[, list(ArrivalRate=length(Duration), GoS=quantile(Duration, quantile, na.rm=TRUE), Quantile50=as.double(median(Duration, na.rm=TRUE))), by=list(Filename,Transaction,Time)]
+  groupedDataIncomplete <- data[, list(ArrivalRate=length(Duration), quantile1=quantile(Duration, quantile1, na.rm=TRUE), quantile2=quantile(Duration, quantile2, na.rm=TRUE)), by=list(Filename,Transaction,Time)]
 
   # Grouped data does not have values for all time samples, for example some low volume transactions 
   # do not have transactions coming in for every time period.
@@ -58,8 +58,8 @@ graphsByTransaction <- function(file, startHour = 0, endHour = 24, quantile=0.95
 
   # Set NA values to zero so they plot as a zero
   groupedData$ArrivalRate[is.na(groupedData$ArrivalRate)] <- 0
-  groupedData$GoS[is.na(groupedData$GoS)] <- 0
-  groupedData$Quantile50[is.na(groupedData$Quantile50)] <- 0
+  groupedData$quantile1[is.na(groupedData$quantile1)] <- 0
+  groupedData$quantile2[is.na(groupedData$quantile2)] <- 0
   
   # Convert the x-axis data series from factors to time, so they plot much better.
   groupedData[,Time:=as.POSIXct(as.character(Time))]
@@ -67,32 +67,25 @@ graphsByTransaction <- function(file, startHour = 0, endHour = 24, quantile=0.95
   # Delete all existing graphs if they exist
   createOrEmptyDirectory(directory)
   
-  transactionTypes <- levels(groupedData$Transaction)
+  # Melt data for easier faceting when graphing
+  meltedData <- melt(groupedData, measure.vars = c("ArrivalRate", "quantile1", "quantile2"))
+  
+  # Rename variable names so they are easier to understand
+  meltedData[variable == "quantile1"]$variable <- paste(quantile1, "Quantile")
+  meltedData[variable == "quantile2"]$variable <- paste(quantile2, "Quantile")
+  
+  transactionTypes <- levels(meltedData$Transaction)
   
   for(index in seq_along(transactionTypes)) {
+    # Subsetting
     transactionType <- transactionTypes[index]
+    graphData <- meltedData[Transaction == transactionType]
+
     print(paste(index, "=", transactionType))
     
-    # Subset only for the transaction type
-    graphData <- groupedData[Transaction == transactionType]
+    # Plotting
+    ggp <- ggplot(data=graphData, mapping=aes(x=Time, y=value, colour=Filename))
     
-    # Exclude transaction types which don't have a minimum number of time samples
-    # This is a preference, not a technical limitation.  Otherwise can generate lots of empty graphs.
-    if(nrow(graphData) < 5) {
-      print("Skipping this one because there are not enough time samples to plot")
-      next
-    }
-    
-    # Melt the ArrivalRate and GoS columns into variables for easier graphing
-    meltedData <- melt(graphData, measure.vars = c("ArrivalRate", "GoS", "Quantile50"))
-
-    # Rename variable names so they graph nicer
-    meltedData[variable=="GoS"]$variable <- paste(quantile, "Quantile")
-    meltedData[variable=="Quantile50"]$variable <- "0.5 Quantile"
-    
-    ggp <- ggplot(data=meltedData, mapping=aes(x=Time, y=value, colour=Filename))
-    
-    # Plot multiple graphs per image
     facets <- facet_grid(variable ~ ., scales="free")
     
     labels <- labs(title=transactionType, y="", x="Time")
