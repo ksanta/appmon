@@ -2,7 +2,7 @@
 # Given filename can be a regular expression so that it matches multiple files.
 # Default grouping of transaction ArrivalRates is a 5 minute interval, though this can be changed with binPeriod
 
-graphsByTransaction <- function(file, startHour = 0, endHour = 24, binPeriod = "5 min", quantile1=0.95, quantile2=0.50, filterByUser = NULL) {
+graphsByTransaction <- function(file, startHour = 0, endHour = 24, binPeriod = "5 min", quantile1=0.95, quantile2=0.50, filterByUser = NULL, singleChart = FALSE) {
   source("multiMonitorLogFile.R")
   source("commonFunctions.R")
   library(ggplot2)
@@ -17,9 +17,15 @@ graphsByTransaction <- function(file, startHour = 0, endHour = 24, binPeriod = "
 
   # Optionally filter down to one user
   if(!is.null(filterByUser)) {
-    data <- data[data$User == filterByUser]
-    data <- droplevels(data)
+    data <- data[User == filterByUser]
   }
+  
+  # Optioanlly flatten the transaction types
+  if(singleChart == TRUE) {
+    data$Transaction <- "All Transactions"
+  }
+
+  data <- droplevels(data)
   
   # Ignore the date portion - hardcode all to same value, will be hidden when graphing
   tempTimes <- as.POSIXlt(data$Start.Time)
