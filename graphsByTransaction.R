@@ -9,6 +9,8 @@ graphsByTransaction <- function(file, startHour = 0, endHour = 24, binPeriod = "
   library(scales)
   library(reshape2)
   
+  print("Please visit https://github.com/ksanta/appmon for latest version of this script")
+  
   # Directory where the images will be saved (no trailing slash)
   directory <- "graphsByTransaction"
   
