@@ -1,4 +1,4 @@
-histograms <- function(file, startHour = 0, endHour = 24) {
+histograms <- function(file, startHour = 0, endHour = 24, singleChart = FALSE) {
   source("multiMonitorLogFile.R")
   source("commonFunctions.R")
   library(ggplot2)
@@ -7,6 +7,11 @@ histograms <- function(file, startHour = 0, endHour = 24) {
   
   # Read in the monitor log file
   data <- multiMonitorLogFile(file, startHour, endHour)
+  
+  # Optionally flatten the transaction types
+  if(singleChart == TRUE) {
+    data$Transaction <- "All Transactions"
+  }
   
   # Set key for fast lookups later on
   setkey(data, Transaction)
