@@ -22,7 +22,7 @@ graphsByTransaction <- function(file, startHour = 0, endHour = 24, binPeriod = "
     data <- data[User == filterByUser]
   }
   
-  # Optioanlly flatten the transaction types
+  # Optionally flatten the transaction types
   if(singleChart == TRUE) {
     data$Transaction <- "All Transactions"
   }
@@ -96,7 +96,10 @@ graphsByTransaction <- function(file, startHour = 0, endHour = 24, binPeriod = "
     
     facets <- facet_grid(variable ~ ., scales="free")
     
-    labels <- labs(title=transactionType, y="", x="Time")
+    title <- transactionType
+    subtitle <- paste0("From ", startHour, ":00 till ",endHour, ":00")
+    titleExpression <- bquote(atop(.(title), italic(.(subtitle))))
+    labels <- labs(title=titleExpression, y="", x="Time")
     
     theme <- theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
                    plot.title = element_text(size = rel(0.75)), legend.position="bottom",
