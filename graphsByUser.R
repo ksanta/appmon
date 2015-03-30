@@ -9,6 +9,8 @@ graphsByUser <- function(file, startHour = 0, endHour = 24, resolution = "5 min"
   library(scales)
   library(reshape2)
   
+  print("Please visit https://github.com/ksanta/appmon for latest version of this script")
+  
   # Directory where the images will be saved (no trailing slash)
   directory <- "graphsByUser"
   
@@ -96,6 +98,9 @@ graphsByUser <- function(file, startHour = 0, endHour = 24, resolution = "5 min"
     
     title <- user
     subtitle <- paste0("Resolution: ", resolution)
+    if(!is.null(filterByTransaction)) {
+      subtitle <- paste0(subtitle, ", Transaction: ", filterByTransaction)
+    }
     titleExpression <- bquote(atop(.(title), italic(.(subtitle))))
     labels <- labs(title=titleExpression, y="", x="Time")
     
