@@ -1,8 +1,8 @@
 # Creates a graph per transaction type showing arrival rate over time.
 # Given filename can be a regular expression so that it matches multiple files.
-# Default grouping of transaction ArrivalRates is a 5 minute interval, though this can be changed with binPeriod
+# Default grouping of transaction ArrivalRates is a 5 minute interval, though this can be changed with resolution
 
-graphsByTransaction <- function(file, startHour = 0, endHour = 24, binPeriod = "5 min", quantile1=0.95, quantile2=0.50, filterByUser = NULL, singleChart = FALSE) {
+graphsByTransaction <- function(file, startHour = 0, endHour = 24, resolution = "5 min", quantile1=0.95, quantile2=0.50, filterByUser = NULL, singleChart = FALSE) {
   source("multiMonitorLogFile.R")
   source("commonFunctions.R")
   library(ggplot2)
@@ -43,7 +43,7 @@ graphsByTransaction <- function(file, startHour = 0, endHour = 24, binPeriod = "
   data$End.Time <- as.POSIXct(tempTimes)
   
   # Create factors which will be used to group each transaction into time intervals
-  timeSlots <- cut(data$Start.Time, binPeriod)
+  timeSlots <- cut(data$Start.Time, resolution)
   data[,Time:=timeSlots]
   
   # Require keying of data table for grouping
@@ -97,7 +97,10 @@ graphsByTransaction <- function(file, startHour = 0, endHour = 24, binPeriod = "
     facets <- facet_grid(variable ~ ., scales="free")
     
     title <- transactionType
-    subtitle <- paste0("From ", startHour, ":00 till ",endHour, ":00")
+    subtitle <- paste0("Resolution: ", resolution)
+    if(!is.null(filterByUser)) {
+      subtitle <- paste0(subtitle, ", User: ", filterByUser)
+    }
     titleExpression <- bquote(atop(.(title), italic(.(subtitle))))
     labels <- labs(title=titleExpression, y="", x="Time")
     
