@@ -7,21 +7,30 @@ monitorLogFile <- function(filename, startHour = 0, endHour = 24) {
     stop("The end hour must be larger than the start hour.  Did you forget to use 24hr time?")
   }
   
-  # Check if processed file already exists and try loading that - for speed
-  processedFileName <- paste0(filename, ".processed")
+  # First check if data is already present in memory - loads fastest
+  if(dataExistsInCache(filename)) {
+    print(paste("Loading cached file:", filename))
+    return(invisible(getDataFromCache(filename)))
+  }
+  
+  # Secondly check if processed file already exists on filesystem - loads fast
+  processedFileName <- paste(filename, ".processed", sep="")
   if(file.exists(processedFileName)) {
     print(paste("Loading processed file:", filename))
     
     data <- read.csv(file=processedFileName, header=TRUE, 
                      colClasses=c("POSIXct", "POSIXct", "character", "factor", "factor", "numeric", "factor"))
     
-    data <- subset(data, hour(Start.Time) >= startHour & hour(Start.Time) < endHour)
-    
     # Easier to work with data.tables downstream
     DT <- data.table(data)
     setkey(DT, Transaction)
     
-    return(DT)
+    # Put in the memory cache
+    putDataInCache(filename, DT)
+    
+    DT <- subset(DT, hour(Start.Time) >= startHour & hour(Start.Time) < endHour)
+    
+    return(invisible(DT))
   }
   
   print(paste("Reading and processing file:", filename))
@@ -92,6 +101,25 @@ monitorLogFile <- function(filename, startHour = 0, endHour = 24) {
   print("Saving processed file for faster loading next time")
   write.csv(result, file = processedFileName, row.names = FALSE)
 
+  # Put in the memory cache
+  putDataInCache(filename, result)
+  
   # Filter by hour and return
-  subset(result, hour(Start.Time) >= startHour & hour(Start.Time) < endHour)
+  invisible(subset(result, hour(Start.Time) >= startHour & hour(Start.Time) < endHour))
+}
+
+# Puts the monitor log file into the globalenv
+putDataInCache <- function(filename, data) {
+  assign(x = filename, value = data, envir = globalenv())
+}
+
+# Returns TRUE if the monitor log file exists in the cache
+dataExistsInCache<- function(filename) {
+  exists(x = filename, envir = globalenv())
+}
+
+# Returns the monitor log file from globalenv, or null if not found
+getDataFromCache <- function(filename) {
+    data <- get(x = filename, envir = globalenv())
+    return(invisible(data))
 }
