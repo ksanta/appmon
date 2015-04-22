@@ -1,4 +1,4 @@
-histograms <- function(file, startHour = 0, endHour = 24, singleChart = FALSE) {
+histograms <- function(file, startHour = 0, endHour = 24, filterByUser = NULL, singleChart = FALSE) {
   source("multiMonitorLogFile.R")
   source("commonFunctions.R")
   library(ggplot2)
@@ -7,6 +7,11 @@ histograms <- function(file, startHour = 0, endHour = 24, singleChart = FALSE) {
   
   # Read in the monitor log file
   data <- multiMonitorLogFile(file, startHour, endHour)
+  
+  # Optionally filter down to one user
+  if(!is.null(filterByUser)) {
+    data <- data[User == filterByUser]
+  }
   
   # Optionally flatten the transaction types
   if(singleChart == TRUE) {
