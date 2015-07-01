@@ -30,17 +30,9 @@ graphsByUser <- function(file, startHour = 0, endHour = 24, resolution = "5 min"
   data <- droplevels(data)
   
   # Ignore the date portion - hardcode all to same value, will be hidden when graphing
-  tempTimes <- as.POSIXlt(data$Start.Time)
-  tempTimes$year <- 100
-  tempTimes$mon <- 0
-  tempTimes$mday <- 1
-  data$Start.Time <- as.POSIXct(tempTimes)
-  
-  tempTimes <- as.POSIXlt(data$End.Time)
-  tempTimes$year <- 100
-  tempTimes$mon <- 0
-  tempTimes$mday <- 1
-  data$End.Time <- as.POSIXct(tempTimes)
+  # TODO: there MAY be a problem here with daylight savings time
+  data$Start.Time <- as.POSIXct(as.numeric(data$Start.Time) %% 86400, origin = "2000-06-01")
+  data$End.Time <- as.POSIXct(as.numeric(data$End.Time) %% 86400, origin = "2000-06-01")
   
   # Create factors which will be used to group each transaction into time intervals
   timeSlots <- cut(data$Start.Time, resolution)
@@ -108,9 +100,11 @@ graphsByUser <- function(file, startHour = 0, endHour = 24, resolution = "5 min"
                    plot.title = element_text(size = rel(0.75)), legend.position="bottom",
                    legend.direction="vertical")
     
-    timescale <- scale_x_datetime(breaks=date_breaks("1 hour"), minor_breaks=date_breaks("10 min"), labels=date_format("%H:%M"))
+    timescale <- scale_x_datetime(breaks=date_breaks("1 hour"), minor_breaks=date_breaks("10 min"), labels=date_format("%H:%M", Sys.timezone()))
     
     plot <- ggp + facets + geom_line(alpha=0.5) + labels + theme + expand_limits(y = 0) + timescale
+    
+    #print(plot)
     
     ggsave(plot=plot, filename=paste0(directory, "/", index, ".png"))
   }
