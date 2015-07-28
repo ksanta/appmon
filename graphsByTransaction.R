@@ -74,14 +74,17 @@ graphsByTransaction <- function(file, startHour = 0, endHour = 24, resolution = 
   meltedData[variable == "quantile1"]$variable <- paste(quantile1, "Quantile")
   meltedData[variable == "quantile2"]$variable <- paste(quantile2, "Quantile")
   
-  transactionTypes <- levels(meltedData$Transaction)
+  # Sort by highest counts first (can't use summary() as it creates an "other" group)
+  # TODO: may fail because of filtering earlier on
+  transCounts <- data[,length(Duration),by=Transaction]
+  transactionTypes <- transCounts[order(-V1)]$Transaction
   
   for(index in seq_along(transactionTypes)) {
     # Subsetting
-    transactionType <- transactionTypes[index]
+    transactionType <-as.character(transactionTypes[index])
     graphData <- meltedData[Transaction == transactionType]
 
-    print(paste(index, "=", transactionType))
+    print(paste0(index, "/",length(transactionTypes) , " = ", transactionType))
     
     # Plotting
     ggp <- ggplot(data=graphData, mapping=aes(x=Time, y=value, colour=Filename))
