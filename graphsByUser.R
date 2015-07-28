@@ -74,14 +74,17 @@ graphsByUser <- function(file, startHour = 0, endHour = 24, resolution = "5 min"
   meltedData[variable == "quantile1"]$variable <- paste(quantile1, "Quantile")
   meltedData[variable == "quantile2"]$variable <- paste(quantile2, "Quantile")
   
-  users <- levels(meltedData$User)
+  # Sort by highest counts first (can't use summary() as it creates an "other" group)
+  # TODO: may fail because of filtering earlier on
+  userCounts <- data[,length(Duration),by=User]
+  users <- userCounts[order(-V1)]$User
   
   for(index in seq_along(users)) {
     # Subsetting
-    user <- users[index]
+    user <- as.character(users[index])
     graphData <- meltedData[User == user]
     
-    print(paste(index, "=", user))
+    print(paste0(index, "/", length(users), " = ", user))
     
     # Plotting
     ggp <- ggplot(data=graphData, mapping=aes(x=Time, y=value, colour=Filename))
