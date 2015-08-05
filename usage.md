@@ -14,6 +14,7 @@ Install required packages.
 ```
 install.packages("data.table")
 install.packages("ggplot2")
+install.packages("gridExtra")
 ```
 
 Download a copy of a few monitor log files.
@@ -36,13 +37,34 @@ histograms(fileVector, startHour, endHour)
 * startHour and endHour are optional.  They are not quoted.  They limit the transactions to just those between those hours.  The hours are given in 24 hour time.  For example: 3pm = 15.
 * This script will create a "histograms" directory if not found and generate a PNG for each transaction type.
 
+Generate Cumulative Distribution Functions
+------------------------------------------
+CDFs show similar information to histograms but it is easier to compare the performance of two datasets.  Lines to the left are faster, lines to the right are slower.
+
+```
+CDFs(fileVector, startHour, endHour)
+```
+
+* fileVector: see section on files for more information on this, with examples
+* startHour and endHour are optional.  They are not quoted.  They limit the transactions to just those between those hours.  The hours are given in 24 hour time.  For example: 3pm = 15.
+* This script will create a "CDFs" directory if not found and generate a PNG for each transaction type.
+
 Generate arrival rate and grade of service graphs
 -------------------------------------------------
 There are two scripts which will generate graphs.  These two scripts will generate graphs which are split up by either transaction type or user.
 ```
-graphsByTransaction(fileVector, startHour, endHour, quantile, binPeriod, filterByUser)
-graphsByUser(fileVector, startHour, endHour, quantile, binPeriod, filterByUser)
+graphsByTransaction(fileVector, startHour, endHour, resolution = "5 min", quantile1=0.95, quantile2=0.50, filterByUser = NULL, singleChart = FALSE)
+graphsByUser(fileVector, startHour, endHour, resolution = "5 min", quantile1=0.95, quantile2=0.5, filterByTransaction = NULL, singleChart = FALSE)
 ```
+
+* fileVector: see section on files for more information on this, with examples
+* startHour and endHour are optional.  They are not quoted.  They limit the transactions to just those between those hours.  The hours are given in 24 hour time.  For example: 3pm = 15.
+* resolution: the frequency of grouping data on the timeline.  Defaults to "5 min".  Other examples "1 min", "30 sec", "10 min".
+* quantile1 and quantile2: specifies the two grade of service quantiles.  Defaults to 0.95 and 0.5.
+* filterByUser: filters for all transaction types from a given user. Defaults to no filter.
+* filterByTransaction: filters for all users from a given transaction type. Defaults to no filter.
+* singleChart: will combine all transaction types or users together into a single chart.
+* These scripts will create a "graphsByTransaction" or "graphsByUser" directory if not found.
 
 fileVector
 ----------
@@ -97,7 +119,7 @@ Loading monitor log files
 -------------------------
 To load a monitor log file into memory for adhoc analysis:
 ```
-x <- monitorLogFile(filename)
+data <- multiMonitorLogFile(fileVector)
 ```
 You're on your own for the analysis.
 
