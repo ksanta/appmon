@@ -40,23 +40,21 @@ CDFs <- function(file, startHour = 0, endHour = 24, filterByUser = NULL, singleC
     # Build up the graph
     ggp <- ggplot(data=data[transactionType], mapping=aes(x=Duration, fill=Filename, colour=Filename))
     
-    # Build graphs with columns overlapping or side-by-side?
-    histogram <- stat_ecdf()
-        
     title <- transactionType
     subtitle <- paste0("From ", startHour, ":00 till ",endHour, ":00")
     titleExpression <- bquote(atop(.(title), italic(.(subtitle))))
-    labels <- labs(title=titleExpression, y="Count", x="Duration (milliseconds)")
+    labels <- labs(title=titleExpression, y="Percentile", x="Duration (milliseconds)")
     
     theme <- theme(legend.position="bottom", legend.direction="vertical", plot.title = element_text(size = rel(0.75)))
-    plot <- ggp + histogram + scale_x_log10() + labels + theme + annotation_logticks(sides = "b")
+    plot <- ggp + stat_ecdf() + scale_x_log10() + labels + theme + annotation_logticks(sides = "b")
 
     labels2 <- labs(title=titleExpression, y="Volume", x="Transaction")
     theme2 <- theme(legend.position="bottom", legend.direction="vertical", plot.title = element_text(size = rel(0.75)))
     plot2 <- ggp + geom_bar(mapping = aes(x=Transaction, fill=Filename, colour=Filename), width=0.4, position=position_dodge(width=0.5)) + theme2 + labels2
 
-    combinedPlot <- arrangeGrob(plot, plot2, ncol=2, widths=5:1)
-        
-    ggsave(plot=combinedPlot, filename=paste("CDFs/", index, ".png", sep=""))
+    # Use old style of plotting and I can't seem to save using ggsave()    
+    png(filename = paste("CDFs/", index, ".png", sep=""), width = 1200, height = 900)
+    grid.arrange(plot, plot2, ncol=2, widths=c(3,2))
+    dev.off()
   }
 }
