@@ -11,6 +11,9 @@ graphsByTransaction <- function(file, startHour = 0, endHour = 24, resolution = 
   
   print("Please visit https://github.com/ksanta/appmon for latest version of this script")
   
+  # This is required to resolve a bug in R where as.numeric() converts POSIXct without respecting system timezone
+  Sys.setenv(TZ = "UTC")
+  
   # Directory where the images will be saved (no trailing slash)
   directory <- "graphsByTransaction"
   
@@ -28,11 +31,10 @@ graphsByTransaction <- function(file, startHour = 0, endHour = 24, resolution = 
   }
 
   data <- droplevels(data)
-  
-  # Ignore the date portion - hardcode all to same value, will be hidden when graphing
-  # TODO: there MAY be a problem here with daylight savings time
-  data$Start.Time <- as.POSIXct(as.numeric(data$Start.Time) %% 86400, origin = "2000-06-01")
-  data$End.Time <- as.POSIXct(as.numeric(data$End.Time) %% 86400, origin = "2000-06-01")
+
+  # Set date portions to be the same for all dates
+  data$Start.Time <- as.POSIXct(as.numeric(data$Start.Time) %% 86400, origin = Sys.Date())
+  data$End.Time <- as.POSIXct(as.numeric(data$End.Time) %% 86400, origin = Sys.Date())
   
   # Create factors which will be used to group each transaction into time intervals
   timeSlots <- cut(data$Start.Time, resolution)
@@ -103,11 +105,9 @@ graphsByTransaction <- function(file, startHour = 0, endHour = 24, resolution = 
                    plot.title = element_text(size = rel(0.75)), legend.position="bottom",
                    legend.direction="vertical")
     
-    timescale <- scale_x_datetime(breaks=date_breaks("1 hour"), minor_breaks=date_breaks("10 min"), labels=date_format("%H:%M", Sys.timezone()))
+    timescale <- scale_x_datetime(breaks=date_breaks("1 hour"), minor_breaks=date_breaks("10 min"), labels=date_format("%H:%M"))
     
     plot <- ggp + facets + geom_line(alpha=0.5) + labels + theme + expand_limits(y = 0) + timescale
-    
-    #print(plot)
     
     ggsave(plot=plot, filename=paste0(directory, "/", index, ".png"))
   }
